@@ -1,4 +1,5 @@
 from random import randrange as rd
+from random import randint
 from math import sqrt
 
 
@@ -10,33 +11,115 @@ class Bird():
         self.pos_y = pos_y
         self.bird = canvas.create_oval(self.pos_x,self.pos_y,self.pos_x+self.radius,self.pos_y+self.radius)
         self.canvas.pack()
+        self.velocityX = randint(1, 10) / 10.0
+        self.velocityY = randint(1, 10) / 10.0
+        self.MAX_VELOCITY = 10
 
-    def move_randomly(self):
-        coordinate_of_the_bird =(self.canvas.coords(self.bird)[0]+self.canvas.coords(self.bird)[2],self.canvas.coords(self.bird)[1]+self.canvas.coords(self.bird)[3])
-        random_point_list = []  # inizialize a void lists for red point coordinates
-        random_point_list_x = []
-        random_point_list_y = []
-        point_counter = 0  # initizlize counter for the while loop
-        min_dist = 40  # set the minimum euclidean distance beyond you want to create the points
-        max_dist = 45  # set the maximum euclidean distance redpoint can have from blu point
-        max_coodeinate_dist = int(sqrt((max_dist ** 2) / 2))  # from the euclidean distance formula you can get the max coordinate
+    def distance(self, prey):
+        '''Return the distance from another prey'''
+
+        distX = self.pos_x - prey.pos_x
+        distY = self.pos_y - prey.pos_y
+
+        return sqrt(distX * distX + distY * distY)
+
+    def move_closer(self, prey_list):
+        '''Move closer to a set of prey_list'''
+
+        if len(prey_list) < 1:
+            return
+
+        # calculate the average distances from the other prey_list
+        avgX = 0
+        avgY = 0
+        for prey in prey_list:
+            if prey.pos_x == self.pos_x and prey.pos_y == self.pos_y:
+                continue
+
+            avgX += (self.pos_x - prey.pos_x)
+            avgY += (self.pos_y - prey.pos_y)
+
+        avgX /= len(prey_list)
+        avgY /= len(prey_list)
+
+        # set our velocity towards the others
+        distance = sqrt((avgX * avgX) + (avgY * avgY)) * -1.0
+
+        self.velocityX -= (avgX / 100)
+        self.velocityY -= (avgY / 100)
 
 
-        while True:  # create a potentailly infinite loop! pay attention!
-            if point_counter < 20:  # set the number of point you want to add (in this case 20)
-                x_RedPtshift = rd(-max_coodeinate_dist, max_coodeinate_dist, 1)  # x shift of a red point
-                y_RedPtshift = rd(-max_coodeinate_dist, max_coodeinate_dist, 1)  # y shift of a red point
-                if sqrt(x_RedPtshift ** 2 + y_RedPtshift ** 2) > min_dist:  # if the point create go beyond the minimum distance
-                    ptRedx = coordinate_of_the_bird[0] + x_RedPtshift  # x coordinate of a red point
-                    ptRedy = coordinate_of_the_bird[1] + y_RedPtshift  # y coordinate of a red point
-                    ptRed = [ptRedx, ptRedy]  # list with the x,y,z coordinates
-                    print(ptRed)
-                    if ptRed not in random_point_list:  # avoid to create red point with the same coordinates
-                        random_point_list.append(ptRed)  # add to a list with this notation [x1,y1],[x2,y2]
-                        random_point_list_x.append(ptRedx)  # add to a list with this notation [x1,x2,x3...] for plotting
-                        random_point_list_y.append(ptRedy)  # add to a list with this notation [y1,y2,y3...] for plotting
-                        point_counter += 1  # add one to the counter of how many points you have in your list
-            else:  # when point_counter reach the number of points you want the while cicle ends
-                break
-            return random_point_list
+    def move_with(self, prey_list):
+        '''Move with a set of prey_list'''
+
+        if len(prey_list) < 1:
+            return
+        # calculate the average velocities of the other prey_list
+        avgX = 0
+        avgY = 0
+
+        for prey in prey_list:
+            avgX += prey.velocityX
+            avgY += prey.velocityY
+
+        avgX /= len(prey_list)
+        avgY /= len(prey_list)
+
+        # set our velocity towards the others
+        self.velocityX += (avgX / 40)
+        self.velocityY += (avgY / 40)
+
+    def move_away(self, prey_list, minDistance):
+        '''Move away from a set of prey_list. This avoids crowding'''
+
+        if len(prey_list) < 1:
+            return
+
+        distanceX = 0
+        distanceY = 0
+        numClose = 0
+
+        for prey in prey_list:
+            distance = self.distance(prey)
+
+            if  distance < minDistance:
+                numClose += 1
+                xdiff = (self.pos_x - prey.pos_x)
+                ydiff = (self.pos_y - prey.pos_y)
+
+                if xdiff >= 0:
+                    xdiff = sqrt(minDistance) - xdiff
+                elif xdiff < 0:
+                    xdiff = -sqrt(minDistance) - xdiff
+
+                if ydiff >= 0:
+                    ydiff = sqrt(minDistance) - ydiff
+                elif ydiff < 0:
+                    ydiff = -sqrt(minDistance) - ydiff
+
+                distanceX += xdiff
+                distanceY += ydiff
+
+        if numClose == 0:
+            return
+
+        self.velocityX -= distanceX / 5
+        self.velocityY -= distanceY / 5
+
+
+
+
+    def update(self):
+        '''Perform actual movement based on our velocity'''
+
+        if abs(self.velocityX) > self.MAX_VELOCITY or abs(self.velocityY) > self.MAX_VELOCITY:
+            scaleFactor = self.MAX_VELOCITY / max(abs(self.velocityX), abs(self.velocityY))
+            self.velocityX *= scaleFactor
+            self.velocityY *= scaleFactor
+
+        self.pos_x += self.velocityX
+        self.pos_y += self.velocityY
+        self.canvas.move(self.bird,self.pos_x,self.pos_y)
+
+
 
