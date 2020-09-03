@@ -7,10 +7,9 @@ class Bird():
     def __init__(self,canvas,pos_x,pos_y):
         self.canvas = canvas
         self.pos_x = pos_x
-        self.radius = 20
+        self.radius = 10
         self.pos_y = pos_y
         self.bird = canvas.create_oval(self.pos_x,self.pos_y,self.pos_x+self.radius,self.pos_y+self.radius)
-        self.canvas.pack()
         self.velocityX = randint(1, 10) / 10.0
         self.velocityY = randint(1, 10) / 10.0
         self.MAX_VELOCITY = 10
@@ -119,7 +118,12 @@ class Bird():
 
         self.pos_x += self.velocityX
         self.pos_y += self.velocityY
-        self.canvas.move(self.bird,self.pos_x,self.pos_y)
+        coords = [self.pos_x,self.pos_y,self.pos_x+self.radius,self.pos_y+self.radius]
+        self.canvas.coords(self.bird, coords[0], coords[1], coords[2], coords[3])
+
+
+
+
 
 
 
