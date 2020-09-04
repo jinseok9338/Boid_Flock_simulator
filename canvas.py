@@ -3,7 +3,7 @@ from bird import Bird
 import random
 
 NUM_BOIDS = 100
-SCREEN_SIZE = SCREEN_WIDTH, SCREEN_HEIGHT = 1200, 1200
+SCREEN_SIZE = SCREEN_WIDTH, SCREEN_HEIGHT = 800, 800
 BORDER = 0
 
 root = tk.Tk()
@@ -15,11 +15,13 @@ canvas.pack()
 
 bird_list = []
 for i in range(NUM_BOIDS):
-    bird = Bird(canvas,random.randint(0, 1000), random.randint(0, 1000))
+    bird = Bird(canvas,random.randint(0, 800), random.randint(0, 800))
     # Add the prey to the list of objects
     bird_list.append(bird)
     canvas.update()
 
+while True:
+    canvas.update()
     for prey in bird_list:
         closeBoids = []
         for otherBoid in bird_list:
